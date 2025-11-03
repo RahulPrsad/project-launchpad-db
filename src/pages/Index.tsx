@@ -106,61 +106,32 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Database Features Section */}
+      {/* Stats Section */}
       <section className="py-16 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <Card className="border-2">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Powered by PostgreSQL</CardTitle>
-              <CardDescription>
-                Enterprise-grade database with comprehensive relationships and constraints
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold">Foreign Key Relationships</p>
-                      <p className="text-sm text-muted-foreground">
-                        Projects linked to companies, applications to students
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold">Data Integrity</p>
-                      <p className="text-sm text-muted-foreground">
-                        UNIQUE constraints and CASCADE deletes
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold">Automatic Timestamps</p>
-                      <p className="text-sm text-muted-foreground">
-                        Triggers for created_at and updated_at fields
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold">Row Level Security</p>
-                      <p className="text-sm text-muted-foreground">
-                        Protected access with RLS policies
-                      </p>
-                    </div>
-                  </div>
-                </div>
+        <div className="container mx-auto max-w-5xl">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center space-y-2 p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:scale-105 transition-transform duration-300">
+              <div className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                500+
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-lg font-semibold">Companies</div>
+              <p className="text-sm text-muted-foreground">Top tech companies offering internships</p>
+            </div>
+            <div className="text-center space-y-2 p-6 rounded-2xl bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 hover:scale-105 transition-transform duration-300">
+              <div className="text-4xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
+                1000+
+              </div>
+              <div className="text-lg font-semibold">Opportunities</div>
+              <p className="text-sm text-muted-foreground">Virtual internship positions available</p>
+            </div>
+            <div className="text-center space-y-2 p-6 rounded-2xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 hover:scale-105 transition-transform duration-300">
+              <div className="text-4xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
+                5000+
+              </div>
+              <div className="text-lg font-semibold">Students</div>
+              <p className="text-sm text-muted-foreground">Successfully placed in internships</p>
+            </div>
+          </div>
         </div>
       </section>
 

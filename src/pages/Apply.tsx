@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,11 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Send } from "lucide-react";
+import { Users, Send, CheckCircle2, Sparkles } from "lucide-react";
+
+const mockProjects = [
+  { id: "1", title: "Full Stack Web Development Intern", company: "TechCorp Solutions" },
+  { id: "2", title: "Data Science Intern", company: "DataFlow Analytics" },
+  { id: "3", title: "Cloud Infrastructure Intern", company: "CloudNine Systems" },
+  { id: "4", title: "Cybersecurity Analyst Intern", company: "CyberGuard Security" },
+];
 
 const Apply = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   
   const [studentData, setStudentData] = useState({
     name: "",
@@ -29,144 +33,80 @@ const Apply = () => {
     cover_letter: "",
   });
 
-  const { data: projects } = useQuery({
-    queryKey: ["projects"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*, companies(name)")
-        .eq("status", "open");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const applyMutation = useMutation({
-    mutationFn: async () => {
-      // First, check if student exists
-      let studentId;
-      const { data: existingStudent } = await supabase
-        .from("students")
-        .select("id")
-        .eq("email", studentData.email)
-        .maybeSingle();
-      
-      if (existingStudent) {
-        studentId = existingStudent.id;
-        // Update student info
-        await supabase
-          .from("students")
-          .update({
-            ...studentData,
-            graduation_year: parseInt(studentData.graduation_year),
-          })
-          .eq("id", studentId);
-      } else {
-        // Create new student
-        const { data: newStudent, error: studentError } = await supabase
-          .from("students")
-          .insert([{
-            ...studentData,
-            graduation_year: parseInt(studentData.graduation_year),
-          }])
-          .select()
-          .single();
-        
-        if (studentError) throw studentError;
-        studentId = newStudent.id;
-      }
-      
-      // Create application
-      const { data, error } = await supabase
-        .from("applications")
-        .insert([{
-          student_id: studentId,
-          project_id: applicationData.project_id,
-          cover_letter: applicationData.cover_letter,
-        }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
-      toast({
-        title: "Application Submitted!",
-        description: "Your application has been submitted successfully.",
-      });
-      setStudentData({
-        name: "",
-        email: "",
-        phone: "",
-        university: "",
-        degree: "",
-        graduation_year: "",
-      });
-      setApplicationData({
-        project_id: "",
-        cover_letter: "",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit application. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    applyMutation.mutate();
+    toast({
+      title: "Application Submitted!",
+      description: "Your application has been received. We'll get back to you soon!",
+    });
+    setStudentData({
+      name: "",
+      email: "",
+      phone: "",
+      university: "",
+      degree: "",
+      graduation_year: "",
+    });
+    setApplicationData({
+      project_id: "",
+      cover_letter: "",
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
       <Navigation />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8 animate-fade-in">
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               Apply for Internship
             </h1>
-            <p className="text-muted-foreground">Fill in your details and submit your application</p>
+            <p className="text-muted-foreground text-lg">Take the first step towards your dream career</p>
           </div>
           
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Application Form
-              </CardTitle>
-              <CardDescription>
-                Complete the form below to apply for an internship position
-              </CardDescription>
+          <Card className="border-2 hover:border-primary/50 transition-colors shadow-2xl animate-fade-in bg-card/50 backdrop-blur-sm">
+            <CardHeader className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center shadow-lg">
+                  <Users className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">Application Form</CardTitle>
+                  <CardDescription className="text-base">
+                    Complete all sections to submit your application
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Personal Information</h3>
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Personal Information */}
+                <div className="space-y-4 p-6 rounded-xl bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/20">
+                  <h3 className="text-xl font-semibold flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Personal Information
+                  </h3>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name *</Label>
+                    <Label htmlFor="name" className="text-base">Full Name *</Label>
                     <Input
                       id="name"
+                      className="h-11"
                       value={studentData.name}
                       onChange={(e) => setStudentData({ ...studentData, name: e.target.value })}
                       required
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email" className="text-base">Email *</Label>
                       <Input
                         id="email"
                         type="email"
+                        className="h-11"
                         value={studentData.email}
                         onChange={(e) => setStudentData({ ...studentData, email: e.target.value })}
                         required
@@ -174,10 +114,11 @@ const Apply = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone</Label>
+                      <Label htmlFor="phone" className="text-base">Phone</Label>
                       <Input
                         id="phone"
                         type="tel"
+                        className="h-11"
                         value={studentData.phone}
                         onChange={(e) => setStudentData({ ...studentData, phone: e.target.value })}
                       />
@@ -185,25 +126,31 @@ const Apply = () => {
                   </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Academic Information</h3>
+                {/* Academic Information */}
+                <div className="space-y-4 p-6 rounded-xl bg-gradient-to-br from-secondary/5 to-accent/5 border border-secondary/20">
+                  <h3 className="text-xl font-semibold flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-secondary" />
+                    Academic Information
+                  </h3>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="university">University *</Label>
+                    <Label htmlFor="university" className="text-base">University *</Label>
                     <Input
                       id="university"
+                      className="h-11"
                       value={studentData.university}
                       onChange={(e) => setStudentData({ ...studentData, university: e.target.value })}
                       required
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="degree">Degree *</Label>
+                      <Label htmlFor="degree" className="text-base">Degree *</Label>
                       <Input
                         id="degree"
                         placeholder="e.g., B.Tech Computer Science"
+                        className="h-11"
                         value={studentData.degree}
                         onChange={(e) => setStudentData({ ...studentData, degree: e.target.value })}
                         required
@@ -211,12 +158,13 @@ const Apply = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="graduation_year">Graduation Year *</Label>
+                      <Label htmlFor="graduation_year" className="text-base">Graduation Year *</Label>
                       <Input
                         id="graduation_year"
                         type="number"
                         min="2020"
                         max="2030"
+                        className="h-11"
                         value={studentData.graduation_year}
                         onChange={(e) => setStudentData({ ...studentData, graduation_year: e.target.value })}
                         required
@@ -225,23 +173,27 @@ const Apply = () => {
                   </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Application Details</h3>
+                {/* Application Details */}
+                <div className="space-y-4 p-6 rounded-xl bg-gradient-to-br from-accent/5 to-primary/5 border border-accent/20">
+                  <h3 className="text-xl font-semibold flex items-center gap-2">
+                    <Send className="h-5 w-5 text-accent" />
+                    Application Details
+                  </h3>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="project">Select Internship *</Label>
+                    <Label htmlFor="project" className="text-base">Select Internship *</Label>
                     <Select
                       value={applicationData.project_id}
                       onValueChange={(value) => setApplicationData({ ...applicationData, project_id: value })}
                       required
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11">
                         <SelectValue placeholder="Choose an internship position" />
                       </SelectTrigger>
                       <SelectContent>
-                        {projects?.map((project) => (
+                        {mockProjects.map((project) => (
                           <SelectItem key={project.id} value={project.id}>
-                            {project.title} - {project.companies?.name}
+                            {project.title} - {project.company}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -249,11 +201,12 @@ const Apply = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="cover_letter">Cover Letter</Label>
+                    <Label htmlFor="cover_letter" className="text-base">Cover Letter</Label>
                     <Textarea
                       id="cover_letter"
                       rows={6}
-                      placeholder="Tell us why you're interested in this internship..."
+                      placeholder="Tell us why you're interested in this internship and what makes you a great fit..."
+                      className="resize-none"
                       value={applicationData.cover_letter}
                       onChange={(e) => setApplicationData({ ...applicationData, cover_letter: e.target.value })}
                     />
@@ -262,12 +215,11 @@ const Apply = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full gap-2" 
+                  className="w-full gap-2 h-12 text-base hover:scale-105 transition-transform shadow-lg"
                   size="lg"
-                  disabled={applyMutation.isPending}
                 >
-                  <Send className="h-4 w-4" />
-                  {applyMutation.isPending ? "Submitting..." : "Submit Application"}
+                  <Send className="h-5 w-5" />
+                  Submit Application
                 </Button>
               </form>
             </CardContent>

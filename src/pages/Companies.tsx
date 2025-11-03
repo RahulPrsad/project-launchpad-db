@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,13 +6,48 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, Plus, ExternalLink } from "lucide-react";
+import { Building2, Plus, ExternalLink, MapPin, Briefcase } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
+const mockCompanies = [
+  {
+    id: "1",
+    name: "TechCorp Solutions",
+    industry: "Software Development",
+    location: "San Francisco, CA",
+    description: "Leading provider of cloud-based enterprise solutions with a focus on AI and machine learning.",
+    website: "https://techcorp.example.com",
+  },
+  {
+    id: "2",
+    name: "DataFlow Analytics",
+    industry: "Data Science",
+    location: "New York, NY",
+    description: "Pioneering data analytics company helping businesses make informed decisions through big data.",
+    website: "https://dataflow.example.com",
+  },
+  {
+    id: "3",
+    name: "CloudNine Systems",
+    industry: "Cloud Computing",
+    location: "Seattle, WA",
+    description: "Infrastructure as a service provider specializing in scalable cloud solutions for startups.",
+    website: "https://cloudnine.example.com",
+  },
+  {
+    id: "4",
+    name: "CyberGuard Security",
+    industry: "Cybersecurity",
+    location: "Austin, TX",
+    description: "Next-generation cybersecurity firm protecting digital assets with advanced threat detection.",
+    website: "https://cyberguard.example.com",
+  },
+];
 
 const Companies = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [companies, setCompanies] = useState(mockCompanies);
   const [formData, setFormData] = useState({
     name: "",
     industry: "",
@@ -23,69 +56,37 @@ const Companies = () => {
     website: "",
   });
 
-  const { data: companies, isLoading } = useQuery({
-    queryKey: ["companies"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("companies")
-        .select("*")
-        .order("created_at", { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const addCompanyMutation = useMutation({
-    mutationFn: async (newCompany: typeof formData) => {
-      const { data, error } = await supabase
-        .from("companies")
-        .insert([newCompany])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
-      toast({
-        title: "Success!",
-        description: "Company added successfully.",
-      });
-      setIsDialogOpen(false);
-      setFormData({ name: "", industry: "", location: "", description: "", website: "" });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add company. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addCompanyMutation.mutate(formData);
+    const newCompany = {
+      id: String(companies.length + 1),
+      ...formData,
+    };
+    setCompanies([newCompany, ...companies]);
+    toast({
+      title: "Success!",
+      description: "Company added successfully.",
+    });
+    setIsDialogOpen(false);
+    setFormData({ name: "", industry: "", location: "", description: "", website: "" });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
       <Navigation />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8 animate-fade-in">
           <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Companies
+            <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              Partner Companies
             </h1>
-            <p className="text-muted-foreground">Browse companies offering internships</p>
+            <p className="text-muted-foreground text-lg">Discover leading companies offering virtual internships</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2 hover:scale-105 transition-transform shadow-lg">
                 <Plus className="h-4 w-4" />
                 Add Company
               </Button>
@@ -149,71 +150,64 @@ const Companies = () => {
                   />
                 </div>
                 
-                <Button type="submit" className="w-full" disabled={addCompanyMutation.isPending}>
-                  {addCompanyMutation.isPending ? "Adding..." : "Add Company"}
+                <Button type="submit" className="w-full">
+                  Add Company
                 </Button>
               </form>
             </DialogContent>
           </Dialog>
         </div>
 
-        {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-6 bg-muted rounded w-3/4 mb-2" />
-                  <div className="h-4 bg-muted rounded w-1/2" />
-                </CardHeader>
-                <CardContent>
-                  <div className="h-20 bg-muted rounded" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : companies?.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No companies yet</h3>
-              <p className="text-muted-foreground mb-4">Be the first to add a company!</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {companies?.map((company) => (
-              <Card key={company.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                        <Building2 className="h-6 w-6 text-primary-foreground" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl">{company.name}</CardTitle>
-                        <CardDescription>{company.industry}</CardDescription>
-                      </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {companies.map((company, index) => (
+            <Card 
+              key={company.id} 
+              className="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 hover:border-primary/50 animate-fade-in bg-card/50 backdrop-blur-sm"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                      <Building2 className="h-7 w-7 text-primary-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                        {company.name}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-1 mt-1">
+                        <Briefcase className="h-3 w-3" />
+                        {company.industry}
+                      </CardDescription>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground">{company.location}</p>
-                  {company.description && (
-                    <p className="text-sm line-clamp-3">{company.description}</p>
-                  )}
-                  {company.website && (
-                    <Button variant="ghost" size="sm" asChild className="gap-2">
-                      <a href={company.website} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4" />
-                        Visit Website
-                      </a>
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  {company.location}
+                </p>
+                {company.description && (
+                  <p className="text-sm line-clamp-3 leading-relaxed">{company.description}</p>
+                )}
+                {company.website && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    asChild 
+                    className="gap-2 w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                  >
+                    <a href={company.website} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4" />
+                      Visit Website
+                    </a>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </main>
     </div>
   );
